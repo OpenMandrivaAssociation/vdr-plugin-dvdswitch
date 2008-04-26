@@ -1,8 +1,8 @@
 
 %define plugin	dvdswitch
 %define name	vdr-plugin-%plugin
-%define version	0.1.2
-%define rel	12
+%define version	0.1.3
+%define rel	1
 
 Summary:	VDR plugin: allows to play DVD-Images
 Name:		%name
@@ -12,8 +12,11 @@ Group:		Video
 License:	GPL
 URL:		http://www.vdr-wiki.de/wiki/index.php/Dvdswitch-plugin
 Source:		http://download.schmidtie.de/vdr-%plugin-%version.tar.bz2
+Patch0:		90_dvdswitch-0.1.3-1.5.4.dpatch
+Patch1:		03_no-files-crash.dpatch
+Patch2:		dvdswitch-0.1.3-i18n-1.6.patch
 BuildRoot:	%{_tmppath}/%{name}-buildroot
-BuildRequires:	vdr-devel >= 1.4.1-6
+BuildRequires:	vdr-devel >= 1.6.0
 Requires:	vdr-abi = %vdr_abi
 
 %description
@@ -21,6 +24,10 @@ DVDswitch-plugin for VDR.
 
 %prep
 %setup -q -n %plugin-%version
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%vdr_plugin_prep
 chmod 0644 README HISTORY
 
 %vdr_plugin_params_begin %plugin
