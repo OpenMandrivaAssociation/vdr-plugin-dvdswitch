@@ -2,7 +2,7 @@
 %define plugin	dvdswitch
 %define name	vdr-plugin-%plugin
 %define version	0.1.3
-%define rel	3
+%define rel	4
 
 Summary:	VDR plugin: allows to play DVD-Images
 Name:		%name
