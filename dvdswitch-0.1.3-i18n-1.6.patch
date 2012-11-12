@@ -1,0 +1,4594 @@
+
+This is a semi-automatically created i18n adaptation patch and may contain
+errors (such as missing translations). This should only be used as a
+temporary measure until the upstream plugin maintainer fixes the plugin
+properly according to the instructions in i18n-to-gettext.pl.
+
+Created for Mandriva Linux packaging by Anssi Hannula <anssi@mandriva.org>.
+
+
+Index: dvdswitch-0.1.3/Makefile
+===================================================================
+--- dvdswitch-0.1.3/Makefile
++++ dvdswitch-0.1.3/Makefile	2008-04-22 20:33:28.000000000 +0300
+@@ -45,8 +45,8 @@
+ 
+ ### The object files (add further files here):
+ 
+-#OBJS = $(PLUGIN).o i18n.o menu-item.o menu.o dvdlist-item.o dvdlist.o dvdplugin.o setup.o setup-itypes.o imagelist.o imagelist-item.o commands.o helpers.o debug.o
+-OBJS = $(PLUGIN).o i18n.o debug.o helpers.o tools.o imagelist-item.o imagelist.o dvdlist-item.o dvdlist.o dvdplugin.o menu-item.o menu.o setup.o setup-itypes.o commands.o
++#OBJS = $(PLUGIN).o  menu-item.o menu.o dvdlist-item.o dvdlist.o dvdplugin.o setup.o setup-itypes.o imagelist.o imagelist-item.o commands.o helpers.o debug.o
++OBJS = $(PLUGIN).o  debug.o helpers.o tools.o imagelist-item.o imagelist.o dvdlist-item.o dvdlist.o dvdplugin.o menu-item.o menu.o setup.o setup-itypes.o commands.o
+ 
+ ### Implicit rules:
+ 
+@@ -62,9 +62,34 @@
+ 
+ -include $(DEPFILE)
+ 
++### Internationalization (I18N):
++
++PODIR     = po
++LOCALEDIR = $(VDRDIR)/locale
++I18Npo    = $(wildcard $(PODIR)/*.po)
++I18Nmsgs  = $(addprefix $(LOCALEDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
++I18Npot   = $(PODIR)/$(PLUGIN).pot
++
++%.mo: %.po
++	msgfmt -c -o $@ $<
++
++$(I18Npot): $(wildcard *.[ch] *.[ch]xx *.cc *.[ch]pp *.hh)
++	xgettext -C -cTRANSLATORS --no-wrap --no-location -k -ktr -ktrNOOP --msgid-bugs-address='<http://qa.mandriva.com/>' -o $@ $^
++
++%.po: $(I18Npot)
++	msgmerge -U --no-wrap --no-location --backup=none -q $@ $<
++	@touch $@
++
++$(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
++	@mkdir -p $(dir $@)
++	cp $< $@
++
++.PHONY: i18n
++i18n: $(I18Nmsgs)
++
+ ### Targets:
+ 
+-all: libvdr-$(PLUGIN).so
++all: libvdr-$(PLUGIN).so i18n
+ 
+ libvdr-$(PLUGIN).so: $(OBJS)
+ 	$(CXX) $(CXXFLAGS) -shared $(OBJS) -o $@
+@@ -79,4 +104,5 @@
+ 	@echo Distribution package created as $(PACKAGE).tgz
+ 
+ clean:
++	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
+ 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+Index: dvdswitch-0.1.3/dvdswitch.c
+===================================================================
+--- dvdswitch-0.1.3/dvdswitch.c
++++ dvdswitch-0.1.3/dvdswitch.c	2008-04-22 20:33:29.000000000 +0300
+@@ -9,7 +9,7 @@
+ #include <getopt.h>
+ #include <unistd.h>
+ #include <vdr/plugin.h>
+-#include "i18n.h"
++
+ #include "helpers.h"
+ #include "setup.h"
+ #include "menu.h"
+@@ -18,8 +18,8 @@
+ //#include "dvdlist.h"
+ 
+ static const char *VERSION        = "0.1.3";
+-static const char *DESCRIPTION    = "allowed to play DVD-Images";
+-//static const char *MAINMENUENTRY  = "DVDSwitch";
++static const char *DESCRIPTION    = trNOOP("allowed to play DVD-Images");
++//static const char *MAINMENUENTRY  = trNOOP("DVDSwitch");
+ 
+ class cPluginDvdswitch : public cPlugin {
+ private:
+@@ -116,7 +116,7 @@
+ {
+   // Initialize any background activities the plugin shall perform.
+   DEBUG("Plugin wird initialisiert");
+-  RegisterI18n(Phrases);
++  
+ 
+   DVDSwitchSetup.SetConfDir((char*)ConfigDirectory(Name()));
+   cDVDPlugin::Init();
+Index: dvdswitch-0.1.3/i18n.c
+===================================================================
+--- dvdswitch-0.1.3/i18n.c
++++ dvdswitch-0.1.3/i18n.c	2008-04-22 20:33:29.000000000 +0300
+@@ -1,3351 +0,0 @@
+-/*
+- * i18n.c: Internationalization
+- *
+- * See the README file for copyright information and how to reach the author.
+- *
+- * $Id: i18n.c 1.3 2002/06/23 13:05:59 kls Exp $
+- */
+-
+-#include "i18n.h"
+-
+-const tI18nPhrase Phrases[] = {
+-
+-  { "DVDSwitch",// eng,dos
+-    "DVDSwitch",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "allowed to play DVD-Images",// eng,dos
+-    "ermöglicht DVD-Images abzuspielen",//deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { " abcdefghijklmnopqrstuvwxyz0123456789-.#~",// eng,dos
+-    " abcdefghijklmnopqrstuvwxyz0123456789-.#~",//deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Generic Settings",// eng,dos
+-    "Allgemeine Einstellungen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Display Settings",// eng,dos
+-    "Anzeige Einstellungen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Special Display Settings",// eng,dos
+-    "Detailierte Anzeige Einstellungen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Navigation",// eng,dos
+-    "Navigation",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tHide Mainmenu Entry",// eng,dos
+-    "\tVerstecke Hauptmenüeintrag",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\t  Name",// eng,dos
+-    "\t  Name",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tImage Dir.",// eng,dos
+-    "\tImage Verz.",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tView free DiskSpace",// eng,dos
+-    "\tZeige freien Plattenplatz",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tImagetypes",// eng,dos
+-    "\tImagetypen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "to adjust",// eng,dos
+-    "Einstellen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Imagetypes",// eng,dos
+-    "Imagetypen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Description:",// eng,dos
+-    "Beschreibung:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Type-Title:",// eng,dos
+-    "Typ-Bezeichnung:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image Type",// eng,dos
+-    "Image Typ",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory contains:",// eng,dos
+-    "Verzeichnis enthält:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "File Extension:",// eng,dos
+-    "Datei-Erweiterung:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Hide Extension",// eng,dos
+-    "Erweiterung ausblenden",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory with 'VIDEO_TS' Folder",// eng,dos
+-    "Verzeichnis mit 'VIDEO_TS' Ordner",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "File with '.iso' Extension",// eng,dos
+-    "Datei mit '.iso' Extension",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Iso-Image",// eng,dos
+-    "Iso-Image",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory",// eng,dos
+-    "Verzeichnis",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "File",// eng,dos
+-    "Datei",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tDisplay Mode",// eng,dos
+-    "\tAnzeige Modus",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "All Images",// eng,dos
+-    "Alle Images",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "All with Cat.",// eng,dos
+-    "Alle mit Kat.",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directories",// eng,dos
+-    "Verzeichnisse",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\t  Category Type",// eng,dos
+-    "\t  Art der Kategorie",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image-Type",// eng,dos
+-    "Image-Typ",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directories",// eng,dos
+-    "Verzeichnisse",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "File-Type",// eng,dos
+-    "Datei-Typ",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image-File",// eng,dos
+-    "Image-Datei",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image-Directory",// eng,dos
+-    "Image-Verzeichnis",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-
+-  { "\t  invisible empty Dir's/Cat.",// eng,dos
+-    "\t  Blende leere Verz./Kat. aus",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tAlphabetic Sort",// eng,dos
+-    "\talphabetische Sortierung",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "none",// eng,dos
+-    "Keine",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "ascending",// eng,dos
+-    "Aufsteigend",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "descending",// eng,dos
+-    "Absteigend",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tvisible DVD-Drive",// eng,dos
+-    "\tDVD-LW einblenden",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tISO Images first",// eng,dos
+-    "\tISO Images zuerst",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tinvisible Extension",// eng,dos
+-    "\tBlende Erweiterung aus",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tisible Image-Type Col",// eng,dos
+-    "\tZeige Image-Typ Spalte",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\t  Width for Image-Col",// eng,dos
+-    "\t  Breite für Image-Spalte",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tchar for Cat.Line",// eng,dos
+-    "\tZeichen für Kat.Linie",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\t  Count before Cat.Name",// eng,dos
+-    "\t  Anzahl vorm Kat.Namen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tSpaces before/after Cat.Name",// eng,dos
+-    "\tLeerzeichen vor/nach Kat.Name",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tCutText for Subcat",// eng,dos
+-    "\tTrenntext für Subkat.",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tchange Character",// eng,dos
+-    "\tZeichen ändern",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tCat.Jump by Left/Right",// eng,dos
+-    "\tKat.sprung bei Links/Rechts",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "without Catergory",// eng,dos
+-    "ohne Kategorie",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "DVD-Drive",// eng,dos
+-    "DVD-Laufwerk",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image Directory not readable or not exist",// eng,dos
+-    "Image Verzeichnis ist nicht lesbar oder existiert nicht",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "DVD-Plugin not found! Function deactivated!",// eng,dos
+-    "DVD Plugin nicht gefunden! Funktion deaktiviert!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "No Writescript specified",// eng,dos
+-    "Es wurde kein Writescript angegeben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Specified Writescript not exist!",// eng,dos
+-    "Angegebenes Writescript existiert nicht!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Cannot execute Writescript!",// eng,dos
+-    "Kann Writescript nicht ausführen!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "No Readscript specified",// eng,dos
+-    "Es wurde kein Readscript angegeben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Specified Readscript not exist!",// eng,dos
+-    "Angegebenes Readscript existiert nicht!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Cannot execute Readscript!",// eng,dos
+-    "Kann Readscript nicht ausführen!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "invalid file name for DVD-Image",// eng,dos
+-    "ungültiger Dateiname für das DVD-Image",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "'Description' must not empty!",// eng,dos
+-    "'Beschreibung' darf nicht leer sein!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "'Type-Title' must not empty!",// eng,dos
+-    "'Typ Bezeichnung' darf nicht leer sein!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "'Directory contains' must not empty!",// eng,dos
+-    "'Verzeichnis enthält' darf nicht leer sein!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "'File Extension' must not empty!",// eng,dos
+-    "'Datei Erweiterung' darf nicht leer sein!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "really delete Entry?",// eng,dos
+-    "Eintrag wirklich löschen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "really delete DVD?",// eng,dos
+-    "DVD wirklich löschen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "to change",// eng,dos
+-    "Wechseln",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Play",// eng,dos
+-    "Wiedergabe",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Read DVD",// eng,dos
+-    "Lies DVD",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Write DVD",// eng,dos
+-    "Schreibe DVD",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Read DVD",// eng,dos
+-    "Lies DVD",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Imagename:",// eng,dos
+-    "Image-Name:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Imagetype:",// eng,dos
+-    "Image-Typ:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "read in",// eng,dos
+-    "Einlesen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights to move",// eng,dos
+-    "keine Berechtigung zum Verschieben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights to delete",// eng,dos
+-    "keine Berechtigung zum Löschen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights to write",// eng,dos
+-    "keine Berechtigung zum Schreiben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights to create",// eng,dos
+-    "keine Berechtigung zum Erstellen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights to rename",// eng,dos
+-    "keine Berechtigung zum schreiben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "no Rights!",// eng,dos
+-    "keine Berechtigung!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "really delete?",// eng,dos
+-    "Wirklich löschen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory not empty. however delete?",// eng,dos
+-    "Verzeichnis ist nicht leer. Dennoch löschen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Commands",// eng,dos
+-    "Befehle",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory Management",// eng,dos
+-    "Verzeichnis Management",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "DVD-Tray open",// eng,dos
+-    "DVD Schublade öffnen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "DVD-Tray close",// eng,dos
+-    "DVD Schublade schließen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image rename",// eng,dos
+-    "Image umbenennen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image move",// eng,dos
+-    "Image verschieben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image delete",// eng,dos
+-    "Image löschen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image burn",// eng,dos
+-    "Image brennen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image to create from DVD",// eng,dos
+-    "Image von DVD erstellen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Select",// eng,dos
+-    "Auswählen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Rename",// eng,dos
+-    "Umbenennen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Move",// eng,dos
+-    "Verschieben",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Edit Directories",// eng,dos
+-    "Verzeichnisse bearbeiten",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "New:",// eng,dos
+-    "Neu:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory exists",// eng,dos
+-    "Verzeichnis existiert bereits",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Rename:",// eng,dos
+-    "Umbenenen:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Burn Now?",// eng,dos
+-    "Jetzt brennen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Name:",// eng,dos
+-    "Name:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Directory:",// eng,dos
+-    "Verzeichnis:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Imagetype:",// eng,dos
+-    "ImageTyp:",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "No Imagetype selected",// eng,dos
+-    "Es wurde kein Imagetyp ausgewählt!",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "No Directory selected. Use Standard?",// eng,dos
+-    "Es wurde kein Verzeichnis ausgewählt. Standard benutzen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Now Read?",// eng,dos
+-    "Jetzt einlesen?",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Select Directory",// eng,dos
+-    "Verzeichnis auswählen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "File exists in Directory",// eng,dos
+-    "Datei existiert bereits im Verzeichnis",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "none Function",// eng,dos
+-    "keine Funktion",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Dir. Management",// eng,dos
+-    "Verz. Management",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Tray open",// eng,dos
+-    "DVD öffnen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Tray close",// eng,dos
+-    "DVD schließen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Image create",// eng,dos
+-    "Image erstellen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Dir.Mgmt.",// eng,dos
+-    "Verz.Mgmt.",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Close",// eng,dos
+-    "Schließen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Burn",// eng,dos
+-    "Brennen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Create",// eng,dos
+-    "Erstellen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Key allocation",// eng,dos
+-    "Tastenbelegung",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 1",// eng,dos
+-    "\tTaste 1",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 2",// eng,dos
+-    "\tTaste 2",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 3",// eng,dos
+-    "\tTaste 3",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 4",// eng,dos
+-    "\tTaste 4",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 5",// eng,dos
+-    "\tTaste 5",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 6",// eng,dos
+-    "\tTaste 6",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 7",// eng,dos
+-    "\tTaste 7",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 8",// eng,dos
+-    "\tTaste 8",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 9",// eng,dos
+-    "\tTaste 9",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey 0",// eng,dos
+-    "\tTaste 0",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey Red",// eng,dos
+-    "\tTaste Rot",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey Yellow",// eng,dos
+-    "\tTaste Gelb",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey Green",// eng,dos
+-    "\tTaste Grün",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey Blue",// eng,dos
+-    "\tTaste Blau",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tKey OK",// eng,dos
+-    "\tTaste OK",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tvisible Image-Size Col",// eng,dos
+-    "\tZeige Spalte Image Größe",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "\tvisible Image-Type Col",// eng,dos
+-    "\tZeige Spalte Image-Typ",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Insert",// eng,dos
+-    "Einfügen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "New",// eng,dos
+-    "Neu",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { "Delete",// eng,dos
+-    "Löschen",// deu,ger
+-    "",// slv,slo
+-    "",// ita
+-    "",// dut,nla,nld
+-    "",// por
+-    "",// fra,fre
+-    "",// nor
+-    "",// fin,smi
+-    "",// pol
+-    "",// esl,spa
+-    "",// ell,gre
+-    "",// sve,swe
+-    "",// rom,rum
+-    "",// hun
+-    "",// cat,cln
+-    "",// rus
+-    "",// hrv
+-    "",// est
+-    "",// dan
+-#if VDRVERSNUM >= 10342
+-    "",// cze,ces
+-#endif
+-  },
+-  { NULL }
+-  };
+Index: dvdswitch-0.1.3/i18n.h
+===================================================================
+--- dvdswitch-0.1.3/i18n.h
++++ dvdswitch-0.1.3/i18n.h	2008-04-22 20:33:29.000000000 +0300
+@@ -1,16 +0,0 @@
+-/*
+- * i18n.h: Internationalization
+- *
+- * See the README file for copyright information and how to reach the author.
+- *
+- * $Id: i18n.h 1.2 2002/05/11 14:48:16 kls Exp $
+- */
+-
+-#ifndef _I18N__H
+-#define _I18N__H
+-
+-#include <vdr/i18n.h>
+-
+-extern const tI18nPhrase Phrases[];
+-
+-#endif //_I18N__H
+Index: dvdswitch-0.1.3/setup-itypes.c
+===================================================================
+--- dvdswitch-0.1.3/setup-itypes.c
++++ dvdswitch-0.1.3/setup-itypes.c	2008-04-22 20:33:29.000000000 +0300
+@@ -1,6 +1,6 @@
+ #include <vdr/plugin.h>
+ #include "setup-itypes.h"
+-#include "i18n.h"
++
+ 
+ cMenuSetupDSITypes::cMenuSetupDSITypes(bool select, int* retindex, char *buffer)
+   : cOsdMenu(tr("Imagetypes"))
+Index: dvdswitch-0.1.3/setup.c
+===================================================================
+--- dvdswitch-0.1.3/setup.c
++++ dvdswitch-0.1.3/setup.c	2008-04-22 20:33:29.000000000 +0300
+@@ -1,6 +1,6 @@
+ #include "setup.h"
+ #include "menu.h"
+-#include "i18n.h"
++
+ #include "dvdplugin.h"
+ #include "setup-itypes.h"
+ 
+@@ -11,7 +11,7 @@
+ cDVDSwitchSetup::cDVDSwitchSetup(void)
+ {
+   HideMenuEntry = 0;
+-  strcpy(MenuName, "DVDSwitch");
++  strcpy(MenuName, trNOOP("DVDSwitch"));
+   CustomMenuName = false;
+   strcpy(ImageDir, "/video/dvd");
+   ImageDirPerParam = false;
+Index: dvdswitch-0.1.3/po/de_DE.po
+===================================================================
+--- dvdswitch-0.1.3/po/de_DE.po
++++ dvdswitch-0.1.3/po/de_DE.po	2008-04-22 20:33:28.000000000 +0300
+@@ -0,0 +1,537 @@
++# VDR dvdswitch plugin language source file.
++# Copyright (C) YEAR THE VDR-dvdswitch'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the VDR-dvdswitch package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR-dvdswitch\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-22 20:33+0300\n"
++"PO-Revision-Date: 2008-04-22 20:33+0300\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: <vdr@linuxtv.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: commands.c:43 setup.c:94 setup.c:106
++msgid "Commands"
++msgstr "Befehle"
++
++#: commands.c:49 commands.c:98 commands.c:169
++msgid "Directory Management"
++msgstr "Verzeichnis Management"
++
++#: commands.c:50 commands.c:100
++msgid "DVD-Tray open"
++msgstr "DVD Schublade öffnen"
++
++#: commands.c:51 commands.c:102
++msgid "DVD-Tray close"
++msgstr "DVD Schublade schließen"
++
++#: commands.c:52 commands.c:104 setup.c:88 setup.c:100
++msgid "Play"
++msgstr "Wiedergabe"
++
++#: commands.c:58 commands.c:106 setup.c:89
++msgid "Image rename"
++msgstr "Image umbenennen"
++
++#: commands.c:64 commands.c:108 setup.c:90
++msgid "Image move"
++msgstr "Image verschieben"
++
++#: commands.c:70 commands.c:110 setup.c:91
++msgid "Image delete"
++msgstr "Image löschen"
++
++#: commands.c:76 commands.c:112 setup.c:92
++msgid "Image burn"
++msgstr "Image brennen"
++
++#: commands.c:82 commands.c:114
++msgid "Image to create from DVD"
++msgstr "Image von DVD erstellen"
++
++#: commands.c:183
++msgid "Select Directory"
++msgstr "Verzeichnis auswählen"
++
++#: commands.c:200 commands.c:202 commands.c:204 setup-itypes.c:58
++#: setup-itypes.c:60 setup-itypes.c:63 setup-itypes.c:143
++msgid "New"
++msgstr "Neu"
++
++#: commands.c:200 commands.c:761 setup-itypes.c:58
++msgid "Select"
++msgstr "Auswählen"
++
++#: commands.c:202 setup-itypes.c:60 setup.c:103
++msgid "Delete"
++msgstr "Löschen"
++
++#: commands.c:202 commands.c:526 setup.c:102
++msgid "Move"
++msgstr "Verschieben"
++
++#: commands.c:202 setup.c:101
++msgid "Rename"
++msgstr "Umbenennen"
++
++#: commands.c:222
++msgid "Edit Directories"
++msgstr "Verzeichnisse bearbeiten"
++
++#: commands.c:264 commands.c:312 menu.c:780
++msgid "no Rights!"
++msgstr "keine Berechtigung!"
++
++#: commands.c:282 commands.c:658
++msgid "really delete?"
++msgstr "Wirklich löschen?"
++
++#: commands.c:286
++msgid "Directory not empty. however delete?"
++msgstr "Verzeichnis ist nicht leer. Dennoch löschen?"
++
++#: commands.c:369
++msgid "no Rights to create"
++msgstr "keine Berechtigung zum Erstellen"
++
++#: commands.c:379 setup.c:252
++msgid " abcdefghijklmnopqrstuvwxyz0123456789-.#~"
++msgstr " abcdefghijklmnopqrstuvwxyz0123456789-.#~"
++
++#: commands.c:379
++msgid "New:"
++msgstr "Neu:"
++
++#: commands.c:408 commands.c:497
++msgid "Directory exists"
++msgstr "Verzeichnis existiert bereits"
++
++#: commands.c:446 menu.c:1046
++msgid "no Rights to rename"
++msgstr "keine Berechtigung zum schreiben"
++
++#: commands.c:466 commands.c:741 commands.c:742 commands.c:743 menu.c:1073
++msgid " abcdefghijklmnopqrstuvwxyz0123456789-_.#~"
++msgstr ""
++
++#: commands.c:466 menu.c:1073
++msgid "Rename:"
++msgstr "Umbenenen:"
++
++#: commands.c:544
++msgid "Insert"
++msgstr "Einfügen"
++
++#: commands.c:685
++msgid "Specified Writescript not exist!"
++msgstr "Angegebenes Writescript existiert nicht!"
++
++#: commands.c:692
++msgid "Cannot execute Writescript!"
++msgstr "Kann Writescript nicht ausführen!"
++
++#: commands.c:700
++msgid "Burn Now?"
++msgstr "Jetzt brennen?"
++
++#: commands.c:713
++msgid "Read DVD"
++msgstr "Lies DVD"
++
++#: commands.c:723
++msgid "Specified Readscript not exist!"
++msgstr "Angegebenes Readscript existiert nicht!"
++
++#: commands.c:730
++msgid "Cannot execute Readscript!"
++msgstr "Kann Readscript nicht ausführen!"
++
++#: commands.c:741
++msgid "Name:"
++msgstr "Name:"
++
++#: commands.c:742
++msgid "Directory:"
++msgstr "Verzeichnis:"
++
++#: commands.c:743
++msgid "Imagetype:"
++msgstr "ImageTyp:"
++
++#: commands.c:761 commands.c:764
++msgid "read in"
++msgstr "Einlesen"
++
++#: commands.c:796
++msgid "invalid file name for DVD-Image"
++msgstr "ungültiger Dateiname für das DVD-Image"
++
++#: commands.c:801
++msgid "No Imagetype selected"
++msgstr "Es wurde kein Imagetyp ausgewählt!"
++
++#: commands.c:806
++msgid "No Directory selected. Use Standard?"
++msgstr "Es wurde kein Verzeichnis ausgewählt. Standard benutzen?"
++
++#: commands.c:809
++msgid "Now Read?"
++msgstr "Jetzt einlesen?"
++
++#: dvdswitch.c:21
++msgid "allowed to play DVD-Images"
++msgstr "ermöglicht DVD-Images abzuspielen"
++
++#: dvdswitch.c:195
++msgid "Image Directory not readable or not exist"
++msgstr "Image Verzeichnis ist nicht lesbar oder existiert nicht"
++
++#: dvdswitch.c:203
++msgid "DVD-Plugin not found! Function deactivated!"
++msgstr "DVD Plugin nicht gefunden! Funktion deaktiviert!"
++
++#: imagelist.c:19
++msgid "Directory with 'VIDEO_TS' Folder"
++msgstr "Verzeichnis mit 'VIDEO_TS' Ordner"
++
++#: imagelist.c:20 setup-itypes.c:164
++msgid "Directory"
++msgstr "Verzeichnis"
++
++#: imagelist.c:24
++msgid "File with '.iso' Extension"
++msgstr "Datei mit '.iso' Extension"
++
++#: imagelist.c:25
++msgid "Iso-Image"
++msgstr "Iso-Image"
++
++#: menu.c:272
++msgid "Image-File"
++msgstr "Image-Datei"
++
++#: menu.c:294
++msgid "Image-Directory"
++msgstr "Image-Verzeichnis"
++
++#: menu.c:388 menu.c:419 menu.c:450 menu.c:481
++msgid "to change"
++msgstr "Wechseln"
++
++#: menu.c:550
++msgid "File exists in Directory"
++msgstr "Datei existiert bereits im Verzeichnis"
++
++#: menu.c:953
++msgid "without Catergory"
++msgstr "ohne Kategorie"
++
++#: menu.c:1000
++msgid "DVD-Drive"
++msgstr "DVD-Laufwerk"
++
++#: setup-itypes.c:6
++msgid "Imagetypes"
++msgstr "Imagetypen"
++
++#: setup-itypes.c:60 setup-itypes.c:147
++msgid "Edit"
++msgstr ""
++
++#: setup-itypes.c:83
++msgid "really delete Entry?"
++msgstr "Eintrag wirklich löschen?"
++
++#: setup-itypes.c:165
++msgid "File"
++msgstr "Datei"
++
++#: setup-itypes.c:176
++msgid "Description:"
++msgstr "Beschreibung:"
++
++#: setup-itypes.c:180
++msgid "Type-Title:"
++msgstr "Typ-Bezeichnung:"
++
++#: setup-itypes.c:184
++msgid "Image Type"
++msgstr "Image Typ"
++
++#: setup-itypes.c:185
++msgid "Directory contains:"
++msgstr "Verzeichnis enthält:"
++
++#: setup-itypes.c:185
++msgid "File Extension:"
++msgstr "Datei-Erweiterung:"
++
++#: setup-itypes.c:190
++msgid "Hide Extension"
++msgstr "Erweiterung ausblenden"
++
++#: setup-itypes.c:215
++msgid "'Description' must not empty!"
++msgstr "'Beschreibung' darf nicht leer sein!"
++
++#: setup-itypes.c:220
++msgid "'Type-Title' must not empty!"
++msgstr "'Typ Bezeichnung' darf nicht leer sein!"
++
++#: setup-itypes.c:226
++msgid "'Directory contains' must not empty!"
++msgstr "'Verzeichnis enthält' darf nicht leer sein!"
++
++#: setup-itypes.c:228
++msgid "'File Extension' must not empty!"
++msgstr "'Datei Erweiterung' darf nicht leer sein!"
++
++#: setup.c:14
++msgid "DVDSwitch"
++msgstr "DVDSwitch"
++
++#: setup.c:69
++msgid "All Images"
++msgstr "Alle Images"
++
++#: setup.c:70
++msgid "All with Cat."
++msgstr "Alle mit Kat."
++
++#: setup.c:71 setup.c:75
++msgid "Directories"
++msgstr "Verzeichnisse"
++
++#: setup.c:74
++msgid "Image-Type"
++msgstr "Image-Typ"
++
++#: setup.c:76
++msgid "File-Type"
++msgstr "Datei-Typ"
++
++#: setup.c:79
++msgid "none"
++msgstr "Keine"
++
++#: setup.c:80
++msgid "ascending"
++msgstr "Aufsteigend"
++
++#: setup.c:81
++msgid "descending"
++msgstr "Absteigend"
++
++#: setup.c:84
++msgid "none Function"
++msgstr "keine Funktion"
++
++#: setup.c:85
++msgid "Dir. Management"
++msgstr "Verz. Management"
++
++#: setup.c:86
++msgid "Tray open"
++msgstr "DVD öffnen"
++
++#: setup.c:87
++msgid "Tray close"
++msgstr "DVD schließen"
++
++#: setup.c:93
++msgid "Image create"
++msgstr "Image erstellen"
++
++#: setup.c:97
++msgid "Dir.Mgmt."
++msgstr "Verz.Mgmt."
++
++#: setup.c:98
++msgid "Open"
++msgstr ""
++
++#: setup.c:99
++msgid "Close"
++msgstr "Schließen"
++
++#: setup.c:104
++msgid "Burn"
++msgstr "Brennen"
++
++#: setup.c:105
++msgid "Create"
++msgstr "Erstellen"
++
++#: setup.c:243
++msgid "Generic Settings"
++msgstr "Allgemeine Einstellungen"
++
++#: setup.c:247
++msgid "\tHide Mainmenu Entry"
++msgstr "\tVerstecke Hauptmenüeintrag"
++
++#: setup.c:249
++msgid "\t  Name"
++msgstr "\t  Name"
++
++#: setup.c:254
++msgid "\tImage Dir."
++msgstr "\tImage Verz."
++
++#: setup.c:258 setup.c:431 setup.c:437
++msgid "\tImagetypes"
++msgstr "\tImagetypen"
++
++#: setup.c:259
++msgid "\tView free DiskSpace"
++msgstr "\tZeige freien Plattenplatz"
++
++#: setup.c:265
++msgid "Display Settings"
++msgstr "Anzeige Einstellungen"
++
++#: setup.c:269
++msgid "\tDisplay Mode"
++msgstr "\tAnzeige Modus"
++
++#: setup.c:271
++msgid "\t  Category Type"
++msgstr "\t  Art der Kategorie"
++
++#: setup.c:273
++msgid "\t  invisible empty Dir's/Cat."
++msgstr "\t  Blende leere Verz./Kat. aus"
++
++#: setup.c:274
++msgid "\tAlphabetic Sort"
++msgstr "\talphabetische Sortierung"
++
++#: setup.c:275
++msgid "\tvisible DVD-Drive"
++msgstr "\tDVD-LW einblenden"
++
++#: setup.c:281
++msgid "Special Display Settings"
++msgstr "Detailierte Anzeige Einstellungen"
++
++#: setup.c:285
++msgid "\tvisible Image-Type Col"
++msgstr "\tZeige Spalte Image-Typ"
++
++#: setup.c:287
++msgid "\t  Width for Image-Col"
++msgstr "\t  Breite für Image-Spalte"
++
++#: setup.c:288
++msgid "\tvisible Image-Size Col"
++msgstr "\tZeige Spalte Image Größe"
++
++#: setup.c:289
++msgid "\tchange Character"
++msgstr "\tZeichen ändern"
++
++#: setup.c:297
++msgid "\tchar for Cat.Line"
++msgstr "\tZeichen für Kat.Linie"
++
++#: setup.c:300
++msgid "\t  Count before Cat.Name"
++msgstr "\t  Anzahl vorm Kat.Namen"
++
++#: setup.c:301
++msgid "\tSpaces before/after Cat.Name"
++msgstr "\tLeerzeichen vor/nach Kat.Name"
++
++#: setup.c:303
++msgid "\tCutText for Subcat"
++msgstr "\tTrenntext für Subkat."
++
++#: setup.c:315
++msgid "Navigation"
++msgstr "Navigation"
++
++#: setup.c:319
++msgid "\tCat.Jump by Left/Right"
++msgstr "\tKat.sprung bei Links/Rechts"
++
++#: setup.c:326
++msgid "Key allocation"
++msgstr "Tastenbelegung"
++
++#: setup.c:330
++msgid "\tKey 1"
++msgstr "\tTaste 1"
++
++#: setup.c:331
++msgid "\tKey 2"
++msgstr "\tTaste 2"
++
++#: setup.c:332
++msgid "\tKey 3"
++msgstr "\tTaste 3"
++
++#: setup.c:333
++msgid "\tKey 4"
++msgstr "\tTaste 4"
++
++#: setup.c:334
++msgid "\tKey 5"
++msgstr "\tTaste 5"
++
++#: setup.c:335
++msgid "\tKey 6"
++msgstr "\tTaste 6"
++
++#: setup.c:336
++msgid "\tKey 7"
++msgstr "\tTaste 7"
++
++#: setup.c:337
++msgid "\tKey 8"
++msgstr "\tTaste 8"
++
++#: setup.c:338
++msgid "\tKey 9"
++msgstr "\tTaste 9"
++
++#: setup.c:339
++msgid "\tKey 0"
++msgstr "\tTaste 0"
++
++#: setup.c:340
++msgid "\tKey Red"
++msgstr "\tTaste Rot"
++
++#: setup.c:341
++msgid "\tKey Green"
++msgstr "\tTaste Grün"
++
++#: setup.c:342
++msgid "\tKey Yellow"
++msgstr "\tTaste Gelb"
++
++#: setup.c:343
++msgid "\tKey Blue"
++msgstr "\tTaste Blau"
++
++#: setup.c:344
++msgid "\tKey OK"
++msgstr "\tTaste OK"
++
++#: setup.c:432
++msgid "to adjust"
++msgstr "Einstellen"
++
++#: tools.h:43
++msgid "no Rights to delete"
++msgstr "keine Berechtigung zum Löschen"
++
++#: tools.h:98
++msgid "no Rights to move"
++msgstr "keine Berechtigung zum Verschieben"
+Index: dvdswitch-0.1.3/po/dvdswitch.pot
+===================================================================
+--- dvdswitch-0.1.3/po/dvdswitch.pot
++++ dvdswitch-0.1.3/po/dvdswitch.pot	2008-04-22 20:33:28.000000000 +0300
+@@ -0,0 +1,538 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++#, fuzzy
++msgid ""
++msgstr ""
++"Project-Id-Version: PACKAGE VERSION\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-22 20:33+0300\n"
++"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: LANGUAGE <LL@li.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=CHARSET\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: commands.c:43 setup.c:94 setup.c:106
++msgid "Commands"
++msgstr ""
++
++#: commands.c:49 commands.c:98 commands.c:169
++msgid "Directory Management"
++msgstr ""
++
++#: commands.c:50 commands.c:100
++msgid "DVD-Tray open"
++msgstr ""
++
++#: commands.c:51 commands.c:102
++msgid "DVD-Tray close"
++msgstr ""
++
++#: commands.c:52 commands.c:104 setup.c:88 setup.c:100
++msgid "Play"
++msgstr ""
++
++#: commands.c:58 commands.c:106 setup.c:89
++msgid "Image rename"
++msgstr ""
++
++#: commands.c:64 commands.c:108 setup.c:90
++msgid "Image move"
++msgstr ""
++
++#: commands.c:70 commands.c:110 setup.c:91
++msgid "Image delete"
++msgstr ""
++
++#: commands.c:76 commands.c:112 setup.c:92
++msgid "Image burn"
++msgstr ""
++
++#: commands.c:82 commands.c:114
++msgid "Image to create from DVD"
++msgstr ""
++
++#: commands.c:183
++msgid "Select Directory"
++msgstr ""
++
++#: commands.c:200 commands.c:202 commands.c:204 setup-itypes.c:58
++#: setup-itypes.c:60 setup-itypes.c:63 setup-itypes.c:143
++msgid "New"
++msgstr ""
++
++#: commands.c:200 commands.c:761 setup-itypes.c:58
++msgid "Select"
++msgstr ""
++
++#: commands.c:202 setup-itypes.c:60 setup.c:103
++msgid "Delete"
++msgstr ""
++
++#: commands.c:202 commands.c:526 setup.c:102
++msgid "Move"
++msgstr ""
++
++#: commands.c:202 setup.c:101
++msgid "Rename"
++msgstr ""
++
++#: commands.c:222
++msgid "Edit Directories"
++msgstr ""
++
++#: commands.c:264 commands.c:312 menu.c:780
++msgid "no Rights!"
++msgstr ""
++
++#: commands.c:282 commands.c:658
++msgid "really delete?"
++msgstr ""
++
++#: commands.c:286
++msgid "Directory not empty. however delete?"
++msgstr ""
++
++#: commands.c:369
++msgid "no Rights to create"
++msgstr ""
++
++#: commands.c:379 setup.c:252
++msgid " abcdefghijklmnopqrstuvwxyz0123456789-.#~"
++msgstr ""
++
++#: commands.c:379
++msgid "New:"
++msgstr ""
++
++#: commands.c:408 commands.c:497
++msgid "Directory exists"
++msgstr ""
++
++#: commands.c:446 menu.c:1046
++msgid "no Rights to rename"
++msgstr ""
++
++#: commands.c:466 commands.c:741 commands.c:742 commands.c:743 menu.c:1073
++msgid " abcdefghijklmnopqrstuvwxyz0123456789-_.#~"
++msgstr ""
++
++#: commands.c:466 menu.c:1073
++msgid "Rename:"
++msgstr ""
++
++#: commands.c:544
++msgid "Insert"
++msgstr ""
++
++#: commands.c:685
++msgid "Specified Writescript not exist!"
++msgstr ""
++
++#: commands.c:692
++msgid "Cannot execute Writescript!"
++msgstr ""
++
++#: commands.c:700
++msgid "Burn Now?"
++msgstr ""
++
++#: commands.c:713
++msgid "Read DVD"
++msgstr ""
++
++#: commands.c:723
++msgid "Specified Readscript not exist!"
++msgstr ""
++
++#: commands.c:730
++msgid "Cannot execute Readscript!"
++msgstr ""
++
++#: commands.c:741
++msgid "Name:"
++msgstr ""
++
++#: commands.c:742
++msgid "Directory:"
++msgstr ""
++
++#: commands.c:743
++msgid "Imagetype:"
++msgstr ""
++
++#: commands.c:761 commands.c:764
++msgid "read in"
++msgstr ""
++
++#: commands.c:796
++msgid "invalid file name for DVD-Image"
++msgstr ""
++
++#: commands.c:801
++msgid "No Imagetype selected"
++msgstr ""
++
++#: commands.c:806
++msgid "No Directory selected. Use Standard?"
++msgstr ""
++
++#: commands.c:809
++msgid "Now Read?"
++msgstr ""
++
++#: dvdswitch.c:21
++msgid "allowed to play DVD-Images"
++msgstr ""
++
++#: dvdswitch.c:195
++msgid "Image Directory not readable or not exist"
++msgstr ""
++
++#: dvdswitch.c:203
++msgid "DVD-Plugin not found! Function deactivated!"
++msgstr ""
++
++#: imagelist.c:19
++msgid "Directory with 'VIDEO_TS' Folder"
++msgstr ""
++
++#: imagelist.c:20 setup-itypes.c:164
++msgid "Directory"
++msgstr ""
++
++#: imagelist.c:24
++msgid "File with '.iso' Extension"
++msgstr ""
++
++#: imagelist.c:25
++msgid "Iso-Image"
++msgstr ""
++
++#: menu.c:272
++msgid "Image-File"
++msgstr ""
++
++#: menu.c:294
++msgid "Image-Directory"
++msgstr ""
++
++#: menu.c:388 menu.c:419 menu.c:450 menu.c:481
++msgid "to change"
++msgstr ""
++
++#: menu.c:550
++msgid "File exists in Directory"
++msgstr ""
++
++#: menu.c:953
++msgid "without Catergory"
++msgstr ""
++
++#: menu.c:1000
++msgid "DVD-Drive"
++msgstr ""
++
++#: setup-itypes.c:6
++msgid "Imagetypes"
++msgstr ""
++
++#: setup-itypes.c:60 setup-itypes.c:147
++msgid "Edit"
++msgstr ""
++
++#: setup-itypes.c:83
++msgid "really delete Entry?"
++msgstr ""
++
++#: setup-itypes.c:165
++msgid "File"
++msgstr ""
++
++#: setup-itypes.c:176
++msgid "Description:"
++msgstr ""
++
++#: setup-itypes.c:180
++msgid "Type-Title:"
++msgstr ""
++
++#: setup-itypes.c:184
++msgid "Image Type"
++msgstr ""
++
++#: setup-itypes.c:185
++msgid "Directory contains:"
++msgstr ""
++
++#: setup-itypes.c:185
++msgid "File Extension:"
++msgstr ""
++
++#: setup-itypes.c:190
++msgid "Hide Extension"
++msgstr ""
++
++#: setup-itypes.c:215
++msgid "'Description' must not empty!"
++msgstr ""
++
++#: setup-itypes.c:220
++msgid "'Type-Title' must not empty!"
++msgstr ""
++
++#: setup-itypes.c:226
++msgid "'Directory contains' must not empty!"
++msgstr ""
++
++#: setup-itypes.c:228
++msgid "'File Extension' must not empty!"
++msgstr ""
++
++#: setup.c:14
++msgid "DVDSwitch"
++msgstr ""
++
++#: setup.c:69
++msgid "All Images"
++msgstr ""
++
++#: setup.c:70
++msgid "All with Cat."
++msgstr ""
++
++#: setup.c:71 setup.c:75
++msgid "Directories"
++msgstr ""
++
++#: setup.c:74
++msgid "Image-Type"
++msgstr ""
++
++#: setup.c:76
++msgid "File-Type"
++msgstr ""
++
++#: setup.c:79
++msgid "none"
++msgstr ""
++
++#: setup.c:80
++msgid "ascending"
++msgstr ""
++
++#: setup.c:81
++msgid "descending"
++msgstr ""
++
++#: setup.c:84
++msgid "none Function"
++msgstr ""
++
++#: setup.c:85
++msgid "Dir. Management"
++msgstr ""
++
++#: setup.c:86
++msgid "Tray open"
++msgstr ""
++
++#: setup.c:87
++msgid "Tray close"
++msgstr ""
++
++#: setup.c:93
++msgid "Image create"
++msgstr ""
++
++#: setup.c:97
++msgid "Dir.Mgmt."
++msgstr ""
++
++#: setup.c:98
++msgid "Open"
++msgstr ""
++
++#: setup.c:99
++msgid "Close"
++msgstr ""
++
++#: setup.c:104
++msgid "Burn"
++msgstr ""
++
++#: setup.c:105
++msgid "Create"
++msgstr ""
++
++#: setup.c:243
++msgid "Generic Settings"
++msgstr ""
++
++#: setup.c:247
++msgid "\tHide Mainmenu Entry"
++msgstr ""
++
++#: setup.c:249
++msgid "\t  Name"
++msgstr ""
++
++#: setup.c:254
++msgid "\tImage Dir."
++msgstr ""
++
++#: setup.c:258 setup.c:431 setup.c:437
++msgid "\tImagetypes"
++msgstr ""
++
++#: setup.c:259
++msgid "\tView free DiskSpace"
++msgstr ""
++
++#: setup.c:265
++msgid "Display Settings"
++msgstr ""
++
++#: setup.c:269
++msgid "\tDisplay Mode"
++msgstr ""
++
++#: setup.c:271
++msgid "\t  Category Type"
++msgstr ""
++
++#: setup.c:273
++msgid "\t  invisible empty Dir's/Cat."
++msgstr ""
++
++#: setup.c:274
++msgid "\tAlphabetic Sort"
++msgstr ""
++
++#: setup.c:275
++msgid "\tvisible DVD-Drive"
++msgstr ""
++
++#: setup.c:281
++msgid "Special Display Settings"
++msgstr ""
++
++#: setup.c:285
++msgid "\tvisible Image-Type Col"
++msgstr ""
++
++#: setup.c:287
++msgid "\t  Width for Image-Col"
++msgstr ""
++
++#: setup.c:288
++msgid "\tvisible Image-Size Col"
++msgstr ""
++
++#: setup.c:289
++msgid "\tchange Character"
++msgstr ""
++
++#: setup.c:297
++msgid "\tchar for Cat.Line"
++msgstr ""
++
++#: setup.c:300
++msgid "\t  Count before Cat.Name"
++msgstr ""
++
++#: setup.c:301
++msgid "\tSpaces before/after Cat.Name"
++msgstr ""
++
++#: setup.c:303
++msgid "\tCutText for Subcat"
++msgstr ""
++
++#: setup.c:315
++msgid "Navigation"
++msgstr ""
++
++#: setup.c:319
++msgid "\tCat.Jump by Left/Right"
++msgstr ""
++
++#: setup.c:326
++msgid "Key allocation"
++msgstr ""
++
++#: setup.c:330
++msgid "\tKey 1"
++msgstr ""
++
++#: setup.c:331
++msgid "\tKey 2"
++msgstr ""
++
++#: setup.c:332
++msgid "\tKey 3"
++msgstr ""
++
++#: setup.c:333
++msgid "\tKey 4"
++msgstr ""
++
++#: setup.c:334
++msgid "\tKey 5"
++msgstr ""
++
++#: setup.c:335
++msgid "\tKey 6"
++msgstr ""
++
++#: setup.c:336
++msgid "\tKey 7"
++msgstr ""
++
++#: setup.c:337
++msgid "\tKey 8"
++msgstr ""
++
++#: setup.c:338
++msgid "\tKey 9"
++msgstr ""
++
++#: setup.c:339
++msgid "\tKey 0"
++msgstr ""
++
++#: setup.c:340
++msgid "\tKey Red"
++msgstr ""
++
++#: setup.c:341
++msgid "\tKey Green"
++msgstr ""
++
++#: setup.c:342
++msgid "\tKey Yellow"
++msgstr ""
++
++#: setup.c:343
++msgid "\tKey Blue"
++msgstr ""
++
++#: setup.c:344
++msgid "\tKey OK"
++msgstr ""
++
++#: setup.c:432
++msgid "to adjust"
++msgstr ""
++
++#: tools.h:43
++msgid "no Rights to delete"
++msgstr ""
++
++#: tools.h:98
++msgid "no Rights to move"
++msgstr ""
