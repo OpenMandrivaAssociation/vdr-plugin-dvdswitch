@@ -4,7 +4,7 @@
 Summary:	VDR plugin: allows to play DVD-Images
 Name:		vdr-plugin-%plugin
 Version:	0.1.3
-Release:	7
+Release:	8
 Group:		Video
 License:	GPL
 URL:		http://www.vdr-wiki.de/wiki/index.php/Dvdswitch-plugin
