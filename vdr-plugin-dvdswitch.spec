@@ -7,7 +7,7 @@ Version:	0.1.3
 Release:	8
 Group:		Video
 License:	GPL
-URL:		http://www.vdr-wiki.de/wiki/index.php/Dvdswitch-plugin
+URL:		https://www.vdr-wiki.de/wiki/index.php/Dvdswitch-plugin
 Source:		http://download.schmidtie.de/vdr-%plugin-%{version}.tar.bz2
 Patch0:		90_dvdswitch-0.1.3-1.5.4.dpatch
 Patch1:		03_no-files-crash.dpatch
